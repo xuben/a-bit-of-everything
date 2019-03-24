@@ -1,0 +1,47 @@
+package rules
+ 
+import com.sample.SessionHelper;
+import com.sample.Event;
+import com.sample.DroolsDelayTask;
+ 
+rule "enter room failed"
+    when
+    	e:Event(keyword=="enterroom", value==false)
+    then
+        System.out.println("do something on enter room failed");
+        delete(e)
+end
+
+rule "wait for radio"
+	when
+		e:Event(keyword=="enterroom", value==true, droolsDelayTimer==null)
+		not Event(keyword=="receiveradio")
+	then
+		e.startDroolsDelayTimer(4000);
+end
+
+rule "radio timeout"
+	when
+		e:Event(keyword=="enterroom", value==true, timeout==true)
+		not Event(keyword=="receiveradio")
+	then
+		System.out.println("do something on radio timeout");
+end
+
+rule "receive radio success"
+	when
+		e:Event(keyword=="enterroom", value==true, timeout==false)
+		Event(keyword=="receiveradio", value==true)
+	then
+		System.out.println("radio success");
+		e.cancelDroolsDelayTimer();
+end
+
+rule "receive radio failed"
+    when
+    	e:Event(keyword=="enterroom", value==true, timeout==false)
+        Event(keyword=="receiveradio", value==false)
+    then
+        System.out.println("do something on receive radio failed");
+        e.cancelDroolsDelayTimer();
+end
